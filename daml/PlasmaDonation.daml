@@ -1,0 +1,57 @@
+module PlasmaDonation where
+
+template PlasmaDonationProposal
+  with
+    donationDone: DonationDone
+  where
+    signatory donationDone.plasmaDonor.donor
+    observer donationDone.recipient
+    ensure donationDone.recipient /= donationDone.plasmaDonor.donor
+
+    choice AcceptProposal : ContractId DonationDone
+      controller donationDone.plasmaDonor.donor
+        do
+          create donationDone
+
+    choice RejectProposal : ()
+      controller donationDone.plasmaDonor.donor
+        do
+          pure ()
+
+    choice CancelProposal : ()
+      controller donationDone.recipient
+        do
+          pure ()
+
+template PlasmaDonor 
+  with
+    donor: Party
+    address: Text
+  where
+    signatory donor
+
+    key donor: Party
+    maintainer key
+
+    choice BecomeDonor: ContractId PlasmaDonor with
+        donorAddress: Text
+      controller donor
+      do
+        create this with address = donorAddress
+
+template DonationDone
+  with
+    recipient: Party
+    plasmaDonor: PlasmaDonor
+  where
+    signatory plasmaDonor.donor
+    ensure recipient /= plasmaDonor.donor
+
+template User
+  with
+    username : Party
+  where
+    signatory username
+
+    key username: Party
+    maintainer key
